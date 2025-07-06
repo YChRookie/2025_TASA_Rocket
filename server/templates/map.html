@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <title>Leaflet 地圖</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+      html,
+      body,
+      #map {
+        height: 100%;
+        margin: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+      var map = L.map("map").setView([22.17, 120.89], 10);
+
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/" > CARTO</a> ',
+          subdomains: "abcd",
+          maxZoom: 19,
+        }
+      ).addTo(map);
+
+      var latlngs = [
+        [25.04244103830427, 121.52547663697024], // 國立台北商業大學
+        [25.046264675419593, 121.51753077142155], // 板南線-台北站
+        [25.04801184586861, 121.51705982595327], // 台北火車站
+        [25.033240927925075, 121.5002549812404], // 萬華火車站
+        [25.014032435838946, 121.46381604214825], // 板橋火車站
+        [25.004162073453198, 121.44475388382085], // 浮洲火車站
+        [24.991375667799314, 121.42444434721708], // 樹林火車站
+        [24.98044570959629, 121.40885460827128], // 南樹林火車站
+        [24.972710530189573, 121.39254685818639], // 山佳火車站
+        [24.9545442448651, 121.35511367854724], // 鶯歌火車站
+        [24.972684836213187, 121.33656153299303], // 鳳鳴火車站
+        [24.988914161390102, 121.31444131102685], // 桃園火車站
+        [24.972829273911927, 121.25825052252355], // 內壢火車站
+        [24.953548685289377, 121.22559964143694], // 中壢火車站
+        [24.919596338700806, 121.18355933511037], // 埔心火車站
+        [24.914333303869657, 121.14644619436449], // 楊梅火車站
+        [24.934440236958615, 121.08307364509287], // 富岡火車站
+        [24.931100011886166, 121.06749985434168], // 新富火車站
+        [24.922223534606502, 121.0557355916378], // 北湖火車站
+        [24.90293017197573, 121.0437861334451], // 湖口火車站
+        [24.869234102438156, 120.9964516544253], // 新豐火車站
+        [24.839054572639508, 121.0092696587908], // 竹北火車站
+        [24.80859060495102, 120.98381244325653], // 北新竹火車站
+        [24.801541199102758, 120.97162905913083], // 新竹火車站
+      ];
+
+      var polyline = L.polyline(latlngs, { color: "blue" }).addTo(map);
+
+      var marker = L.marker([22.174835152607056, 120.89257043363129]).addTo(
+        map
+      );
+
+      map.fitBounds(polyline.getBounds());
+
+      fetch("http://127.0.0.1:5000/get_data")
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (data && Array.isArray(data)) {
+            const newLatlngs = data.map((point) => [
+              point.latitude,
+              point.longitude,
+            ]);
+
+            if (polyline) {
+              polyline.setLatLngs(newLatlngs);
+            } else {
+              polyline = L.polyline(newLatlngs, { color: "red" }).addTo(map);
+            }
+
+            map.fitBounds(polyline.getBounds());
+          } else if (
+            data &&
+            typeof data.latitude === "number" &&
+            typeof data.longitude === "number"
+          ) {
+            L.marker([data.latitude, data.longitude]).addTo(map);
+            map.setView([data.latitude, data.longitude], 13);
+          }
+        })
+        .catch((error) => {
+          console.error(
+            "An error occurred while fetching data from the backend.",
+            error
+          );
+        });
+    </script>
+  </body>
+</html>

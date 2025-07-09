@@ -1,5 +1,4 @@
 # -- View --
-# --
 
 
 from PySide6.QtWidgets import (
@@ -16,10 +15,10 @@ from PySide6.QtGui import QIcon, QAction, QFont
 import os
 from threading import Thread, Lock
 from serial_receiver import SerialReceiver
-from Database.db import DBInterface
-from Widget.mplWidget import mplWidget
-from Widget.mapWidget import mapWidget
-from Widget.vtkWidget import vtkWidget
+from database.dbmgr import DBInterface
+from widget.mplWidget import mplWidget
+from widget.mapWidget import mapWidget
+from widget.vtkWidget import vtkWidget
 
 
 class Visualization(QMainWindow, Thread):
@@ -117,6 +116,7 @@ class Visualization(QMainWindow, Thread):
         更新V-T圖、H-T圖、地圖、3D姿態圖
         """
         if self.running_flag:
+            if vtkWidget.
             self.vtWidget.updateLine(time, velocity)
             self.htWidget.updateLine(time, altitude)
             self.mapWidget.updatePosition(longitude, latitude)
@@ -138,3 +138,12 @@ class Visualization(QMainWindow, Thread):
         """重啟感測器"""
         with self.lock:
             self.serial.restart()
+
+    @Slot()
+    def write(self, msg):
+        """寫入ESP32"""
+        with self.lock:
+            if self.serial.is_running():
+                self.serial.write(msg)
+            else:
+                self.terminal.appendPlainText("Serial port is not running.")

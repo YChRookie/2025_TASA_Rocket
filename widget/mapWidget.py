@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtCore import QUrl
-import os
 
 
 class mapWidget(QWidget):
@@ -29,10 +28,10 @@ class mapWidget(QWidget):
     def initializeLeafletMap(self):
         """初始化Leaflet地圖"""
         # 獲取Leaflet資源路徑
-        leaflet_path = r'D:\WorkSpace\Program\2025_TASA_Rocket\resources\leaflet'
+        leaflet_path = r"D:\WorkSpace\Program\2025_TASA_Rocket\resources\leaflet"
 
         # 基本HTML模板，包含Leaflet地圖
-        html = f'''
+        html = f"""
         <!DOCTYPE html>
         <html>
         <head>
@@ -85,7 +84,7 @@ class mapWidget(QWidget):
             </script>
         </body>
         </html>
-        '''
+        """
 
         self.browser.setHtml(html)
 

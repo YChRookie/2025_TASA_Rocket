@@ -11,15 +11,15 @@ class mplWidget(QWidget):
         self.ax = self.fig.add_subplot(111)
 
         # 初始化線條
-        self.line, = self.ax.plot([], [])   # , 'b-'
-        self.ax.set_title(chart_name)       # 設置標題
-        self.ax.set_xlabel(x_label)         # 設置x軸標題
-        self.ax.set_ylabel(y_label)         # 設置y軸標題
-        self.ax.grid(True)                  # 開啟網格
+        (self.line,) = self.ax.plot([], [])  # , 'b-'
+        self.ax.set_title(chart_name)  # 設置標題
+        self.ax.set_xlabel(x_label)  # 設置x軸標題
+        self.ax.set_ylabel(y_label)  # 設置y軸標題
+        self.ax.grid(True)  # 開啟網格
 
         # 創建FigureCanvas
         self.canvas = FigureCanvas(self.fig)
-        self.canvas.setMinimumSize()    # 設置最小尺寸
+        self.canvas.setMinimumSize()  # 設置最小尺寸
 
         # 添加到布局
         layout = QVBoxLayout()
@@ -52,10 +52,9 @@ class mplWidget(QWidget):
         self.fig.tight_layout()
         self.canvas.draw_idle()  # 使用 draw_idle 而不是 draw 以提高性能
 
-    def addHorizontalLine(self, y_value, color='r', style='--', label=None):
+    def addHorizontalLine(self, y_value, color="r", style="--", label=None):
         """添加水平參考線"""
-        line = self.ax.axhline(y=y_value, color=color,
-                               linestyle=style, label=label)
+        line = self.ax.axhline(y=y_value, color=color, linestyle=style, label=label)
         if label:
             self.ax.legend()
         self.canvas.draw_idle()

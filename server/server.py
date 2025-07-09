@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify
 from threading import Thread, Lock
-from Database.db import DBInterface
+from database.dbmgr import DBInterface
 
 
 class Server(Thread):

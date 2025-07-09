@@ -1,18 +1,15 @@
-# -- Controller --
-
-
-import serial
-from struct import unpack
+import struct
 import time
 from threading import Thread, Lock
+import serial
 
 
 class SerialReceiver(Thread):
     def __init__(self, database, port: str, baudrate: int, floats: int = 17):
         super().__init__()
-        self.serial: serial.Serial = serial.Serial(port=port,
-                                                   baudrate=baudrate,
-                                                   timeout=1)
+        self.__serial: serial.Serial = serial.Serial(
+            port=port, baudrate=baudrate, timeout=1
+        )
         self.array_len: int = floats
         self.receive_buffer: list = []
         self.running_flag = False
@@ -21,22 +18,20 @@ class SerialReceiver(Thread):
         self.database_ctl = database()
         self.lock = Lock()
 
-    def parse_data(self, data):
-        unpacked_array = list(unpack(f'{self.array_len}f', data))
+    def __parse_data(self, data):
+        unpacked_array = list(struct.unpack(f"{self.array_len}f", data))
         return unpacked_array
 
-    def start(self):
+    def receive(self):
         self.running_flag = True
+        self.start()
 
         while self.running_flag:
-            if self.serial.in_waiting >= 68:
+            if self.__serial.in_waiting >= 68:
                 with self.lock:
                     try:
-                        data = self.serial.read(68)
-
-                        unpacked_array = list(
-                            unpack(f'{self.array_len}f', data))
-
+                        data = self.__serial.read(68)
+                        unpacked_array = self.__parse_data(data)
                         current_timestamp = unpacked_array[-1]
 
                         if self.prev_timestamp is None:
@@ -76,7 +71,7 @@ class SerialReceiver(Thread):
             if self.is_alive():
                 self.join(timeout=1)
 
-            if self.serial and self.serial.is_open:
+            if self.__serial and self.serial.is_open:
                 self.serial.close()
 
     def restart(self):
@@ -87,11 +82,3 @@ class SerialReceiver(Thread):
 
     def is_running(self):
         return self.running_flag and self.serial.is_open
-
-
-if __name__ == '__main__':
-    from database.db import DBInterface
-    ser = SerialReceiver(DBInterface, port='COM13', baudrate=115200)
-    ser.start()
-    while True:
-        ser.start()

@@ -1,9 +1,8 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog
 from vtkmodules.vtkRenderingCore import (
     vtkPolyDataMapper,
     vtkActor,
     vtkRenderer,
-    vtkRenderWindow
 )
 from vtkmodules.vtkIOGeometry import vtkSTLReader
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -14,14 +13,18 @@ class vtkWidget(QWidget):
     def __init__(self, stl_path=None):
         super().__init__()
 
-        # 設置默認STL文件路徑
         if stl_path is None:
-            stl_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                                    'resources', 'rocket_3d', 'Fusee.STL')
-
-        # 確保STL文件存在
-        if not os.path.exists(stl_path):
-            raise FileNotFoundError(f"STL file not found: {stl_path}")
+            self.status = False
+            stl_path = 'D:\\WorkSpace\\Program\\2025_TASA_Rocket\\resources\\rocket.stl'
+        else:
+            self.status = True
+            # 檢查STL文件是否存在
+            if not os.path.exists(stl_path):
+                raise FileNotFoundError(f"STL file not found: {stl_path}")
+        # 如果沒有提供STL文件路徑，則使用預設的STL文件
+        if stl_path is None:
+            if not os.path.exists(stl_path):
+                raise FileNotFoundError(f"Default STL file not found: {stl_path}")
 
         # 初始化VTK渲染窗口
         self.vtk_widget = QVTKRenderWindowInteractor(self)

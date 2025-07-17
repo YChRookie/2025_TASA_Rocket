@@ -1,0 +1,235 @@
+(.venv) ubuntu@Apollo:/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/controller$ sudo python3 serial_manager.py 
+Traceback (most recent call last):
+  File "/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/controller/serial_manager.py", line 4, in <module>
+    from PySide6.QtWidgets import QPlainTextEdit
+ModuleNotFoundError: No module named 'PySide6'
+(.venv) ubuntu@Apollo:/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/controller$ python3 serial_manager.py 
+Traceback (most recent call last):
+  File "/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/serial/serialposix.py", line 322, in open
+    self.fd = os.open(self.portstr, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: '/dev/ttyUSB0'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/controller/serial_manager.py", line 60, in <module>
+    ser = SerialManager(port='/dev/ttyUSB0', baudrate=115200)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/controller/serial_manager.py", line 9, in __init__
+    self.serial = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/serial/serialutil.py", line 244, in __init__
+    self.open()
+  File "/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/serial/serialposix.py", line 325, in open
+    raise SerialException(msg.errno, "could not open port {}: {}".format(self._port, msg))
+serial.serialutil.SerialException: [Errno 13] could not open port /dev/ttyUSB0: [Errno 13] Permission denied: '/dev/ttyUSB0'
+(.venv) ubuntu@Apollo:/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/controller$ 
+
+
+#   272  sudo     apt install python3.12-venv
+#   273  python3 -m venv ./.venv
+#   274  pip
+#   275  clear
+#   276  source /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/bin/activate
+#   277  pip list
+#   278  pip install uv
+#   279  history
+
+(.venv) ubuntu@Apollo:/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor$ /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/bin/python /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/main.py
+malloc(): unsorted double linked list corrupted
+Fatal Python error: Aborted
+
+Thread 0x00007a7644af46c0 (most recent call first):
+  File "/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/main.py", line 426 in main
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Current thread 0x00007a764f56e080 (most recent call first):
+  File "/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/main.py", line 495 in <module>
+
+Extension modules: shiboken6.Shiboken, PySide6.QtCore, PySide6.QtGui, PySide6.QtWidgets (total: 4)
+中止 (核心已傾印)
+
+(.venv) ubuntu@Apollo:/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor$ gdb --args python3 main.py
+GNU gdb (Ubuntu 15.0.50.20240403-0ubuntu1) 15.0.50.20240403-git
+Copyright (C) 2024 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<https://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+--Type <RET> for more, q to quit, c to continue without paging--c
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from python3...
+
+This GDB supports auto-downloading debuginfo from the following URLs:
+  <https://debuginfod.ubuntu.com>
+Enable debuginfod for this session? (y or [n]) y
+Debuginfod has been enabled.
+To make this setting permanent, add 'set debuginfod enabled on' to .gdbinit.
+Downloading separate debug info for /usr/bin/python3.12
+Reading symbols from /home/ubuntu/.cache/debuginfod_client/7b4e3ff9cbc7f8717dfff5daeb5d187eee8b2088/debuginfo...                                                              
+(gdb) run
+Starting program: /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/bin/python3 main.py
+Downloading separate debug info for system-supplied DSO at 0x7ffff7fc3000
+Downloading separate debug info for /lib/x86_64-linux-gnu/libz.so.1                                                                                                           
+Downloading separate debug info for /lib/x86_64-linux-gnu/libexpat.so.1                                                                                                       
+[Thread debugging using libthread_db enabled]                                                                                                                                 
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+Downloading separate debug info for /usr/lib/python3.12/lib-dynload/termios.cpython-312-x86_64-linux-gnu.so
+Downloading separate debug info for /usr/lib/python3.12/lib-dynload/_hashlib.cpython-312-x86_64-linux-gnu.so                                                                  
+Downloading separate debug info for /lib/x86_64-linux-gnu/libcrypto.so.3                                                                                                      
+Downloading separate debug info for /usr/lib/python3.12/lib-dynload/_decimal.cpython-312-x86_64-linux-gnu.so                                                                  
+Downloading separate debug info for /usr/lib/python3.12/lib-dynload/_ssl.cpython-312-x86_64-linux-gnu.so                                                                      
+Downloading separate debug info for /lib/x86_64-linux-gnu/libssl.so.3                                                                                                         
+Downloading separate debug info for /usr/lib/python3.12/lib-dynload/_bz2.cpython-312-x86_64-linux-gnu.so                                                                      
+Downloading separate debug info for /lib/x86_64-linux-gnu/libbz2.so.1.0                                                                                                       
+Downloading separate debug info for /usr/lib/python3.12/lib-dynload/_lzma.cpython-312-x86_64-linux-gnu.so                                                                     
+Downloading separate debug info for /lib/x86_64-linux-gnu/liblzma.so.5                                                                                                        
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/shiboken6/Shiboken.abi3.so              
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/shiboken6/libshiboken6.abi3.so.6.9      
+Downloading separate debug info for /lib/x86_64-linux-gnu/libstdc++.so.6                                                                                                      
+Downloading separate debug info for /lib/x86_64-linux-gnu/libgcc_s.so.1                                                                                                       
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/QtWidgets.abi3.so               
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/libpyside6.abi3.so.6.9          
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libQt6Widgets.so.6       
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libQt6Gui.so.6           
+Downloading separate debug info for /lib/x86_64-linux-gnu/libGL.so.1                                                                                                          
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libQt6Core.so.6          
+Downloading separate debug info for /lib/x86_64-linux-gnu/libxkbcommon.so.0                                                                                                   
+Downloading separate debug info for /lib/x86_64-linux-gnu/libEGL.so.1                                                                                                         
+Downloading separate debug info for /lib/x86_64-linux-gnu/libfontconfig.so.1                                                                                                  
+Downloading separate debug info for /lib/x86_64-linux-gnu/libX11.so.6                                                                                                         
+Downloading separate debug info for /lib/x86_64-linux-gnu/libglib-2.0.so.0                                                                                                    
+warning: could not find '.gnu_debugaltlink' file for /lib/x86_64-linux-gnu/libglib-2.0.so.0                                                                                   
+Downloading separate debug info for /lib/x86_64-linux-gnu/libglib-2.0.so.0
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libQt6DBus.so.6          
+Downloading separate debug info for /lib/x86_64-linux-gnu/libfreetype.so.6                                                                                                    
+warning: could not find '.gnu_debugaltlink' file for /lib/x86_64-linux-gnu/libgthread-2.0.so.0                                                                                
+Downloading separate debug info for /lib/x86_64-linux-gnu/libgthread-2.0.so.0
+Downloading separate debug info for /lib/x86_64-linux-gnu/libGLdispatch.so.0                                                                                                  
+Downloading separate debug info for /lib/x86_64-linux-gnu/libGLX.so.0                                                                                                         
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libicui18n.so.73         
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libicuuc.so.73           
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libicudata.so.73         
+Downloading separate debug info for /lib/x86_64-linux-gnu/libzstd.so.1                                                                                                        
+Downloading separate debug info for /lib/x86_64-linux-gnu/libxcb.so.1                                                                                                         
+Downloading separate debug info for /lib/x86_64-linux-gnu/libpcre2-8.so.0                                                                                                     
+Downloading separate debug info for /lib/x86_64-linux-gnu/libdbus-1.so.3                                                                                                      
+Downloading separate debug info for /lib/x86_64-linux-gnu/libpng16.so.16                                                                                                      
+Downloading separate debug info for /lib/x86_64-linux-gnu/libbrotlidec.so.1                                                                                                   
+Downloading separate debug info for /lib/x86_64-linux-gnu/libbrotlidec.so.1                                                                                                   
+Downloading separate debug info for /lib/x86_64-linux-gnu/libXau.so.6                                                                                                         
+Downloading separate debug info for /lib/x86_64-linux-gnu/libXdmcp.so.6                                                                                                       
+Downloading separate debug info for /lib/x86_64-linux-gnu/libsystemd.so.0                                                                                                     
+Downloading separate debug info for /lib/x86_64-linux-gnu/libbrotlicommon.so.1                                                                                                
+Downloading separate debug info for /lib/x86_64-linux-gnu/libbsd.so.0                                                                                                         
+Downloading separate debug info for /lib/x86_64-linux-gnu/libcap.so.2                                                                                                         
+warning: could not find '.gnu_debugaltlink' file for /lib/x86_64-linux-gnu/libcap.so.2                                                                                        
+Downloading separate debug info for /lib/x86_64-linux-gnu/libcap.so.2
+Downloading separate debug info for /lib/x86_64-linux-gnu/libgcrypt.so.20                                                                                                     
+Downloading separate debug info for /lib/x86_64-linux-gnu/liblz4.so.1                                                                                                         
+Downloading separate debug info for /lib/x86_64-linux-gnu/libmd.so.0                                                                                                          
+Downloading separate debug info for /lib/x86_64-linux-gnu/libgpg-error.so.0                                                                                                   
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/QtGui.abi3.so                   
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/QtCore.abi3.so                  
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/plugins/platforms/libqwayland-generic.so
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/plugins/platforms/../../lib/libQt6WaylandClient.so.6
+Downloading separate debug info for /lib/x86_64-linux-gnu/libwayland-client.so.0                                                                                              
+Downloading separate debug info for /lib/x86_64-linux-gnu/libwayland-cursor.so.0                                                                                              
+Downloading separate debug info for /lib/x86_64-linux-gnu/libffi.so.8                                                                                                         
+[New Thread 0x7ffff0e416c0 (LWP 19244)]                                                                                                                                       
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/plugins/wayland-shell-integration/libxdg-shell.so
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/plugins/platformthemes/libqgtk3.so
+Downloading separate debug info for /lib/x86_64-linux-gnu/libgtk-3.so.0                                                                                                       
+Downloading separate debug info for /lib/x86_64-linux-gnu/libgdk-3.so.0                                                                                                       
+warning: could not find '.gnu_debugaltlink' file for /lib/x86_64-linux-gnu/libgdk-3.so.0                                                                                      
+Downloading separate debug info for /lib/x86_64-linux-gnu/libgdk-3.so.0
+Downloading separate debug info for /lib/x86_64-linux-gnu/libpangocairo-1.0.so.0                                                                                              
+Downloading separate debug info for /lib/x86_64-linux-gnu/libpango-1.0.so.0                                                                                                   
+Downloading separate debug info for /lib/x86_64-linux-gnu/libatk-1.0.so.0                                                                                                     
+Downloading separate debug info for /lib/x86_64-linux-gnu/libcairo-gobject.so.2                                                                                               
+Downloading separate debug info for /lib/x86_64-linux-gnu/libcairo.so.2                                                                                                       
+Downloading separate debug info for /lib/x86_64-linux-gnu/libgdk_pixbuf-2.0.so.0                                                                                              
+Downloading separate debug info for /lib/x86_64-linux-gnu/libgdk_pixbuf-2.0.so.0                                                                                              
+warning: could not find '.gnu_debugaltlink' file for /lib/x86_64-linux-gnu/libgio-2.0.so.0                                                                                    
+Downloading separate debug info for /lib/x86_64-linux-gnu/libgio-2.0.so.0
+warning: could not find '.gnu_debugaltlink' file for /lib/x86_64-linux-gnu/libgobject-2.0.so.0                                                                                
+Downloading separate debug info for /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+warning: could not find '.gnu_debugaltlink' file for /lib/x86_64-linux-gnu/libgmodule-2.0.so.0                                                                                
+Downloading separate debug info for /lib/x86_64-linux-gnu/libgmodule-2.0.so.0
+Downloading separate debug info for /lib/x86_64-linux-gnu/libharfbuzz.so.0                                                                                                    
+Downloading separate debug info for /lib/x86_64-linux-gnu/libpangoft2-1.0.so.0                                                                                                
+Downloading separate debug info for /lib/x86_64-linux-gnu/libfribidi.so.0                                                                                                     
+Downloading separate debug info for /lib/x86_64-linux-gnu/libepoxy.so.0                                                                                                       
+Downloading separate debug info for /lib/x86_64-linux-gnu/libXi.so.6                                                                                                          
+Downloading separate debug info for /lib/x86_64-linux-gnu/libatk-bridge-2.0.so.0                                                                                              
+Downloading separate debug info for /lib/x86_64-linux-gnu/libXfixes.so.3                                                                                                      
+Downloading separate debug info for /lib/x86_64-linux-gnu/libwayland-egl.so.1                                                                                                 
+Downloading separate debug info for /lib/x86_64-linux-gnu/libXext.so.6                                                                                                        
+Downloading separate debug info for /lib/x86_64-linux-gnu/libXcursor.so.1                                                                                                     
+Downloading separate debug info for /lib/x86_64-linux-gnu/libXdamage.so.1                                                                                                     
+Downloading separate debug info for /lib/x86_64-linux-gnu/libXcomposite.so.1                                                                                                  
+Downloading separate debug info for /lib/x86_64-linux-gnu/libXrandr.so.2                                                                                                      
+Downloading separate debug info for /lib/x86_64-linux-gnu/libXinerama.so.1                                                                                                    
+Downloading separate debug info for /lib/x86_64-linux-gnu/libthai.so.0                                                                                                        
+Downloading separate debug info for /lib/x86_64-linux-gnu/libXrender.so.1                                                                                                     
+Downloading separate debug info for /lib/x86_64-linux-gnu/libxcb-render.so.0                                                                                                  
+Downloading separate debug info for /lib/x86_64-linux-gnu/libxcb-shm.so.0                                                                                                     
+Downloading separate debug info for /lib/x86_64-linux-gnu/libpixman-1.so.0                                                                                                    
+Downloading separate debug info for /lib/x86_64-linux-gnu/libjpeg.so.8                                                                                                        
+Downloading separate debug info for /lib/x86_64-linux-gnu/libmount.so.1                                                                                                       
+Downloading separate debug info for /lib/x86_64-linux-gnu/libselinux.so.1                                                                                                     
+Downloading separate debug info for /lib/x86_64-linux-gnu/libgraphite2.so.3                                                                                                   
+Downloading separate debug info for /lib/x86_64-linux-gnu/libatspi.so.0                                                                                                       
+Downloading separate debug info for /lib/x86_64-linux-gnu/libdatrie.so.1                                                                                                      
+Downloading separate debug info for /lib/x86_64-linux-gnu/libblkid.so.1                                                                                                       
+Downloading separate debug info for /snap/code/199/usr/lib/x86_64-linux-gnu/gtk-3.0/modules/libcanberra-gtk-module.so                                                         
+Downloading separate debug info for /snap/code/199/usr/lib/x86_64-linux-gnu/gtk-3.0/modules/../../libcanberra-gtk3.so.0                                                       
+Downloading separate debug info for /snap/code/199/usr/lib/x86_64-linux-gnu/gtk-3.0/modules/../../libcanberra.so.0                                                            
+Downloading separate debug info for /snap/code/199/usr/lib/x86_64-linux-gnu/gtk-3.0/modules/../../libvorbisfile.so.3                                                          
+Downloading separate debug info for /snap/code/199/usr/lib/x86_64-linux-gnu/gtk-3.0/modules/../../libtdb.so.1                                                                 
+Downloading separate debug info for /snap/code/199/usr/lib/x86_64-linux-gnu/gtk-3.0/modules/../../libltdl.so.7                                                                
+Downloading separate debug info for /snap/code/199/usr/lib/x86_64-linux-gnu/gtk-3.0/modules/../../libvorbis.so.0                                                              
+Downloading separate debug info for /snap/code/199/usr/lib/x86_64-linux-gnu/gtk-3.0/modules/../../libogg.so.0                                                                 
+[New Thread 0x7fffeb0f26c0 (LWP 19367)]                                                                                                                                       
+[New Thread 0x7fffea8f16c0 (LWP 19369)]
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/plugins/platforminputcontexts/libibusplatforminputcontextplugin.so
+[New Thread 0x7fffea0c16c0 (LWP 19392)]                                                                                                                                       
+Downloading separate debug info for /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/plugins/wayland-decoration-client/libbradient.so
+[New Thread 0x7fffdabff6c0 (LWP 19393)]                                                                                                                                       
+[New Thread 0x7fffd93e26c0 (LWP 19394)]
+[New Thread 0x7fffd8be16c0 (LWP 19395)]
+[New Thread 0x7fffd3fff6c0 (LWP 19396)]
+[New Thread 0x7fffd37fe6c0 (LWP 19397)]
+[New Thread 0x7fffd2ffd6c0 (LWP 19398)]
+[New Thread 0x7fffd27fc6c0 (LWP 19399)]
+[New Thread 0x7fffd1ffb6c0 (LWP 19400)]
+[New Thread 0x7fffd17fa6c0 (LWP 19401)]
+
+Thread 1 "python3" received signal SIGSEGV, Segmentation fault.
+0x00007ffff56e73c5 in QTextEngine::itemize() const ()
+   from /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libQt6Gui.so.6
+(gdb) bt
+#0  0x00007ffff56e73c5 in QTextEngine::itemize() const ()
+   from /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libQt6Gui.so.6
+#1  0x00007ffff570d0c0 in QTextLayout::beginLayout() ()
+   from /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libQt6Gui.so.6
+#2  0x00007ffff60366c8 in QPlainTextDocumentLayout::layoutBlock(QTextBlock const&) ()
+   from /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libQt6Widgets.so.6
+#3  0x00007ffff6036b8b in ?? () from /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libQt6Widgets.so.6
+#4  0x00007ffff603740b in ?? () from /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libQt6Widgets.so.6
+#5  0x00007ffff6066716 in ?? () from /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libQt6Widgets.so.6
+#6  0x00007ffff4be7a58 in QObject::event(QEvent*) ()
+   from /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/.venv/lib/python3.12/site-packages/PySide6/Qt/lib/libQt6Core.so.6
+#7  0x00007ffff5e0abdb in QApplicationPrivate::notify_helper(QObject*, QEvent*) ()
+--Type <RET> for more, q to quit, c to continue without paging--

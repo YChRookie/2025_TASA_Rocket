@@ -1,25 +1,14 @@
 from flask import Flask, render_template, jsonify
-from threading import Thread, Lock
-from database.dbmgr import DBInterface
 
+app = Flask(__name__)
 
-class Server(Thread):
-    def __init__(self, database_ctl):
-        self.app = Flask(__name__)
-        self.setup_routes()
-        self.database = database_ctl
+@app.route('/')
+def index():
+    return render_template('map.html')
 
-    def setup_routes(self):
-        @self.app.route("/")
-        def map_view():
-            return render_template("map.html")
+@app.route('/data')
+def data():
+    return jsonify({'a': 1, 'b': 2, 'c': 3})
 
-        @self.app.route("/get_data")
-        def get_data():
-            return jsonify({})
-
-    def run(self):
-        self.app.run(host="0.0.0.0", port=5000, debug=True)
-
-    def stop(self):
-        self.join()
+if __name__ == '__main__':
+    app.run(debug=True)

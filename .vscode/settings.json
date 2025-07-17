@@ -1,4 +1,9 @@
 {
-    "python-envs.defaultEnvManager": "ms-python.python:venv",
-    "python-envs.pythonProjects": []
+  "python.defaultInterpreterPath": "./.venv/bin/python",
+  "python.linting.pylintEnabled": true,
+  "python.analysis.typeCheckingMode": "strict",
+  "python.analysis.stubPath": "typings",
+  "python.linting.pylintArgs": [
+    "--extension-pkg-whitelist=PySide6"
+  ]
 }

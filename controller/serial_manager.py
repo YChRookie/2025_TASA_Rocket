@@ -9,7 +9,6 @@ import pymysql
 from PySide6.QtCore import (
     QObject,
     Signal,
-    Slot,  # type: ignore
 )
 from controller.database_manager import DatabaseManager
 
@@ -52,13 +51,13 @@ class SerialManager(QObject):
     def __log_error(self, error: Exception):
         self.errorSignal.emit(f"[SerialManager][ERROR]: {error}")
 
-    def parse_raw_data(self, data: bytes, mode: str = "struct") -> tuple[float, ...]:
+    def __parse_raw_data(self, data: bytes, mode: str = "struct") -> tuple[float, ...]:
         if mode == "struct":
             return unpack(f"{self.__pack_length}f", data)
         elif mode == "numpy":
             return tuple(np.frombuffer(data, np.float32, count=self.__pack_length))
         else:
-            raise ValueError(f"Unknown mode: {mode}")
+            raise self.errorSignal.emit("[SerialManager][ERROR] Unknowed unpack mode.")  # type: ignore
 
     def start(self):
         self.serial.open()
@@ -66,20 +65,23 @@ class SerialManager(QObject):
     def run(self):
         try:
             if self.is_running:
-                self.process_loop()
+                self.__process_loop()
         except serial.SerialException as e:
             self.__log_error(e)
         except pymysql.Error as e:
             self.__log_error(e)
+        
+    def write(self, message):
+        self.serial.write(message)
 
-    def process_loop(self):
+    def __process_loop(self):
         self.__log_message("Entering process loop...")
         while self.serial.in_waiting >= self.__pack_size:
             raw_data = self.serial.read(self.__pack_size)
-            parsed = self.parse_raw_data(raw_data)
-            self.process_packet(parsed)
+            parsed = self.__parse_raw_data(raw_data)
+            self.__process_packet(parsed)
 
-    def process_packet(self, parsed: tuple[float, ...]):
+    def __process_packet(self, parsed: tuple[float, ...]):
         (
             x_angle,
             y_angle,
@@ -103,10 +105,10 @@ class SerialManager(QObject):
         elapsed = (boot_ts - self.__first_timestamp) / 1000
         self.__previous_timestamp = boot_ts
 
-        self.update_velocity(x_acc, y_acc, z_acc, delta_t)
-        speed = self.calculate_speed()
+        self.__update_velocity(x_acc, y_acc, z_acc, delta_t)
+        speed = self.__calculate_speed()
 
-        self.write_all_to_db(
+        self.__write_all_to_db(
             x_angle,
             y_angle,
             z_angular_velocity,
@@ -122,16 +124,16 @@ class SerialManager(QObject):
             elapsed,
         )
 
-    def update_velocity(self, x: float, y: float, z: float, dt: float):
+    def __update_velocity(self, x: float, y: float, z: float, dt: float):
         self.__velocity[0] += x * dt
         self.__velocity[1] += y * dt
         self.__velocity[2] += z * dt
 
-    def calculate_speed(self) -> float:
+    def __calculate_speed(self) -> float:
         v = self.__velocity
         return np.sqrt(v[0] ** 2 + v[1] ** 2 + v[2] ** 2)
 
-    def write_all_to_db(
+    def __write_all_to_db(
         self,
         x_angle: float,
         y_angle: float,

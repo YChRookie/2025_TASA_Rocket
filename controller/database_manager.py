@@ -191,8 +191,8 @@ class DatabaseManager(QObject):
             )
             return cur.fetchall()
         except pymysql.Error as e:
-            self.errorSignal(f"{e}")  # type: ignore
-            _ = e
+            self.errorSignal(e)  # type: ignore
+            raise
         finally:
             self.__close(con, cur)  # type: ignore
 
@@ -227,8 +227,11 @@ class DatabaseManager(QObject):
     def get_altitude(self, limit: bool = False, limit_count: int | None = None):
         return self.__fetch_data("location", "altitude", limit, limit_count)
 
-    def get_longitude(self, limit: bool = False, limit_count: int | None = None):
-        return self.__fetch_data("location", "longitude", limit, limit_count)
+    def get_longitude(self):
+        return self.__fetch_data("location", "longitude")
 
-    def get_latitude(self, limit: bool = False, limit_count: int | None = None):
-        return self.__fetch_data("location", "latitude", limit, limit_count)
+    def get_latitude(self):
+        return self.__fetch_data("location", "latitude")
+
+    def get_longlat(self):
+        return self.__fetch_data("location", "longitude, latitude")

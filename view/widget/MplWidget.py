@@ -1,6 +1,7 @@
-# view/widget/mplWidget.py
+# ~/view/widget/MplWidget.py
 
-# pylint: disable=no-name-in-module, missing-module-docstring, missing-class-docstring, missing-function-docstring, C0103
+
+# pylint: disable=E0611, C0115, C0103, C0116, C0114, C0301
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from PySide6.QtCore import Slot  # type: ignore
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas

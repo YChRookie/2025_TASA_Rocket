@@ -1,16 +1,13 @@
 # /controller/serial_manager.py
 
 
-# pylint: disable=no-name-in-module, missing-module-docstring, missing-class-docstring, missing-function-docstring
+# pylint: disable=E0611, C0115, C0116, C0301, C0114
 from struct import unpack
 import serial
 import numpy as np
 import pymysql
-from PySide6.QtCore import (
-    QObject,
-    Signal,
-)
-from controller.database_manager import DatabaseManager
+from PySide6.QtCore import QObject, Signal, Slot  # type: ignore
+from database.database_manager import DatabaseManager
 
 
 class SerialManager(QObject):
@@ -59,8 +56,13 @@ class SerialManager(QObject):
         else:
             raise self.errorSignal.emit("[SerialManager][ERROR] Unknowed unpack mode.")  # type: ignore
 
+    @Slot()
     def start(self):
         self.serial.open()
+
+    def stop(self):
+        self.is_running = False
+        self.serial.close()
 
     def run(self):
         try:
@@ -70,9 +72,9 @@ class SerialManager(QObject):
             self.__log_error(e)
         except pymysql.Error as e:
             self.__log_error(e)
-        
-    def write(self, message):
-        self.serial.write(message)
+
+    # def write(self, message):
+    #     self.serial.write(message)
 
     def __process_loop(self):
         self.__log_message("Entering process loop...")

@@ -1,33 +1,86 @@
 # ~/controller/data_fetcher.py
 
 
-# pylint: disable=C0114, E0611, C0115
-import threading
-from PySide6.QtCore import QObject, Signal, Slot  # type: ignore
+# pylint: disable=E0611, C0114
+import pymysql
+from PySide6.QtCore import QObject, Signal, Slot, QTimer
 from database.database_manager import DatabaseManager
 
 
 class DataFetcher(QObject):
-
     dataReady = Signal(list)
+    errorSignal = Signal(str)
+    messageSignal = Signal(str)
 
     def __init__(self, database_manager: DatabaseManager):
         super().__init__()
 
+        # 引用資料庫管理器實例
         self.__db_mgr = database_manager
+        self.is_fetching = False
+
+        # 創建 QTimer，用於定期獲取數據
+        self.__fetch_timer = QTimer(self)
+        self.__fetch_timer.timeout.connect(self.__fetch_data_periodically)
+        self.__polling_interval_ms = 1
+
+    def __log_message(self, message: str):
+        self.messageSignal.emit(f"[DataFetcher][LOG]: {message}")
+
+    def __log_error(self, error: Exception):
+        self.errorSignal.emit(f"[DataFetcher][ERROR]: {error}")
 
     @Slot()
-    def start(self):
-        p = threading.Thread(target=self.fetch_data)
-        p.start()
+    def start_fetching(self):
+        if not self.is_fetching:
+            self.is_fetching = True
+            self.__fetch_timer.start(self.__polling_interval_ms)
+            self.__log_message("[DataFetcher]: Data fetching started.")
+        else:
+            self.__log_message("[DataFetcher]: Data fetching is already running.")
 
-    def fetch_data(self):
-        speed = self.__db_mgr.get_speed()
-        x_velocity = self.__db_mgr.get_x_velocity()
-        y_velocity = self.__db_mgr.get_y_velocity()
-        z_velocity = self.__db_mgr.get_z_velocity()
-        altitude = self.__db_mgr.get_altitude()
-        xy_angle = self.__db_mgr.get_xy_angle()
-        self.dataReady.emit(
-            [speed, x_velocity, y_velocity, z_velocity, altitude, xy_angle]
-        )
+    @Slot()
+    def stop_fetching(self):
+        if self.is_fetching:
+            self.is_fetching = False
+            self.__fetch_timer.stop()
+            self.__log_message("[DataFetcher]: Data fetching stopped.")
+        else:
+            self.__log_message("[DataFetcher]: Data fetching is not running.")
+
+    @Slot()
+    def __fetch_data_periodically(self):
+        if not self.is_fetching:
+            return
+
+        try:
+            elapsed_time = self.__db_mgr.get_elapsed_time()
+            speed = self.__db_mgr.get_speed()
+            x_velocity = self.__db_mgr.get_x_velocity()
+            y_velocity = self.__db_mgr.get_y_velocity()
+            z_velocity = self.__db_mgr.get_z_velocity()
+            altitude = self.__db_mgr.get_altitude()
+            y_angle = self.__db_mgr.get_y_angle()
+
+            latitude_longitude = self.__db_mgr.get_longitude_lattitude()
+
+            self.dataReady.emit(
+                [
+                    elapsed_time,
+                    speed,
+                    x_velocity,
+                    y_velocity,
+                    z_velocity,
+                    altitude,
+                    y_angle,
+                    latitude_longitude,
+                ]
+            )
+            self.__log_message("[DataFetcher]: Data fetched and signal emitted.")
+
+        except pymysql.Error as e:
+            self.__log_error(e)
+            self.stop_fetching()
+        except Exception as e:
+            self.__log_error(e)
+            raise e

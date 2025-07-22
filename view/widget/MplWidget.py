@@ -1,82 +1,144 @@
 # ~/view/widget/MplWidget.py
 
 
-# pylint: disable=E0611, C0115, C0103, C0116, C0114, C0301
+# pylint: disable=E0611, C0114
 from PySide6.QtWidgets import QWidget, QVBoxLayout
-from PySide6.QtCore import Slot  # type: ignore
+from PySide6.QtCore import Qt, Slot
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
 
-class MplWidget(QWidget):
+class VtWidget(QWidget):
     def __init__(self):
         super().__init__()
 
         # 建立 Figure 與 Canvas
-        self.m_figure = Figure()
-        self.m_canvas = FigureCanvas(self.m_figure)
-        self.m_ax = self.m_figure.add_subplot(111)  # type: ignore
+        self.__figure = Figure()
+        self.__canvas = FigureCanvas(self.__figure)
+        self.__ax = self.__figure.add_subplot(111)
 
-        self.m_lines: dict[str, Line2D] = {}
+        self.__lines: dict[str, Line2D] = {}
 
         # 初始化 X, Y, Z 軸速度分量的 Line2D
-        (self.m_lines["x_velocity"],) = self.m_ax.plot([], [], "r-", label="X Velocity")  # type: ignore
-        (self.m_lines["y_velocity"],) = self.m_ax.plot([], [], "g-", label="Y Velocity")  # type: ignore
-        (self.m_lines["z_velocity"],) = self.m_ax.plot([], [], "b-", label="Z Velocity")  # type: ignore
+        (self.__lines["x_velocity"],) = self.__ax.plot([], [], "r-", label="X Velocity")
+        (self.__lines["y_velocity"],) = self.__ax.plot([], [], "g-", label="Y Velocity")
+        (self.__lines["z_velocity"],) = self.__ax.plot([], [], "b-", label="Z Velocity")
         # 初始化速率向量 Line2D
-        (self.m_lines["speed"],) = self.m_ax.plot([], [], "k--", label="Speed")  # type: ignore
+        (self.__lines["speed"],) = self.__ax.plot([], [], "k--", label="Speed")
 
         # 建立 Layout 並加入 Canvas
-        m_layout = QVBoxLayout(self)
-        m_layout.addWidget(self.m_canvas)
-        self.setLayout(m_layout)
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.__canvas)
+        self.setLayout(layout)
 
         # 初始化 Lable 與 Title
-        self.setLabels("Time (s)", "Velocity (m/s)")
-        self.setTitle("Velocity and Speed")
+        self.set_labels("Time (s)", "Velocity (m/s)")
 
         # 啟用 grid
-        self.m_ax.grid(True)  # type: ignore
+        self.__ax.grid(True)
 
         # 添加 legend
-        self.m_ax.legend()  # type: ignore
+        self.__ax.legend()
 
-    @Slot(list, list, list, list)
-    def updatePlot(
+    @Slot(list, list, list, list, list)
+    def update_plot(
         self,
+        elapsed_time: list[float],
         speed: list[float],
-        xVelocity: list[float],
-        yVelocity: list[float],
-        zVelocity: list[float],
+        x_velocity: list[float],
+        y_velocity: list[float],
+        z_velocity: list[float],
     ):
         # 確保數據長度一致
-        num_points = min(len(speed), len(xVelocity), len(yVelocity), len(zVelocity))
-        time_data = list(range(num_points))
+        num_points = min(
+            len(elapsed_time),
+            len(speed),
+            len(x_velocity),
+            len(y_velocity),
+            len(z_velocity),
+        )
+        time_data = elapsed_time[:num_points]
 
         # 更新 Line2D 的數據
-        self.m_lines["x_velocity"].set_data(time_data, xVelocity[:num_points])  # type: ignore
-        self.m_lines["y_velocity"].set_data(time_data, yVelocity[:num_points])  # type: ignore  # type: ignore
-        self.m_lines["z_velocity"].set_data(time_data, zVelocity[:num_points])  # type: ignore
-        self.m_lines["total_speed"].set_data(  # type: ignore
-            time_data, speed[:num_points]
-        )
+        self.__lines["x_velocity"].set_data(time_data, x_velocity[:num_points])
+        self.__lines["y_velocity"].set_data(time_data, y_velocity[:num_points])
+        self.__lines["z_velocity"].set_data(time_data, z_velocity[:num_points])
+        self.__lines["speed"].set_data(time_data, speed[:num_points])
 
-        self.m_ax.relim()  # 重新計算數據限制
-        self.m_ax.autoscale_view(True, True, True)  # 自動縮放視圖
+        self.__ax.relim()  # 重新計算數據限制
+        self.__ax.autoscale_view(True, True, True)  # 自動縮放視圖
 
-        self.m_canvas.draw()  # 重繪 Canvas
+        self.__canvas.draw()  # 重繪 Canvas
 
-    def setTitle(self, titleString: str):
-        self.m_ax.set_title(titleString)  # type: ignore
-        self.m_canvas.draw()
+    def set_title(self, title_string: str):
+        self.__ax.set_title(title_string)
+        self.__canvas.draw()
 
-    def setLabels(self, xLabel: str, yLabel: str):
-        self.m_ax.set_xlabel(xLabel)  # type: ignore
-        self.m_ax.set_ylabel(yLabel)  # type: ignore
-        self.m_canvas.draw()
+    def set_labels(self, x_label: str, y_label: str):
+        self.__ax.set_xlabel(x_label)
+        self.__ax.set_ylabel(y_label)
+        self.__canvas.draw()
 
-    def clearPlot(self):
-        for line_name in self.m_lines.values():
+    def clear_plot(self):
+        for line_name in self.__lines.values():
             line_name.set_data([], [])
-        self.m_canvas.draw()
+        self.__canvas.draw()
+
+
+class HtWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        # 建立 Figure 與 Canvas
+        self.__figure = Figure()
+        self.__canvas = FigureCanvas(self.__figure)
+        self.__ax = self.__figure.add_subplot(111)
+
+        self.__lines: dict[str, Line2D] = {}
+
+        # 初始化海拔的 Line2D
+        (self.__lines["altitude"],) = self.__ax.plot([], [], "b-", label="Altitude")
+
+        # 建立 Layout 並加入 Canvas
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.__canvas)
+        self.setLayout(layout)
+
+        # 初始化 Lable 與 Title
+        self.set_labels("Time (s)", "Altitude (m/s)")
+        self.set_title("Altitude")
+
+        # 啟用 grid
+        self.__ax.grid(True)
+
+        # 添加 legend
+        self.__ax.legend()
+
+    @Slot(list, list)
+    def update_plot(self, elapsed_time: list[float], altitude: list[float]):
+        # 確保數據長度一致
+        num_points = min(len(elapsed_time), len(altitude))
+        time_data = elapsed_time[:num_points]
+
+        # 更新 Line2D 的數據
+        self.__lines["altitude"].set_data(time_data, altitude[:num_points])
+
+        self.__ax.relim()  # 重新計算數據限制
+        self.__ax.autoscale_view(True, True, True)  # 自動縮放視圖
+
+        self.__canvas.draw()  # 重繪 Canvas
+
+    def set_title(self, title_string: str):
+        self.__ax.set_title(title_string)
+        self.__canvas.draw()
+
+    def set_labels(self, x_label: str, y_label: str):
+        self.__ax.set_xlabel(x_label)
+        self.__ax.set_ylabel(y_label)
+        self.__canvas.draw()
+
+    def clear_plot(self):
+        for line_name in self.__lines.values():
+            line_name.set_data([], [])
+        self.__canvas.draw()

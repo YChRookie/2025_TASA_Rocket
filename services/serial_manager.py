@@ -1,12 +1,11 @@
 # /controller/serial_manager.py
 
 
-# pylint: disable=E0611, C0115, C0116, C0301, C0114
-from struct import unpack
+# pylint: disable=E0611, C0114
+import struct
 import serial
 import numpy as np
-import pymysql
-from PySide6.QtCore import QObject, Signal, Slot  # type: ignore
+from PySide6.QtCore import QObject, Signal, Slot, QTimer
 from database.database_manager import DatabaseManager
 
 
@@ -29,8 +28,11 @@ class SerialManager(QObject):
         self.serial.port = port
         self.serial.baudrate = baudrate
         self.serial.timeout = timeout
+        print(self.serial.is_open)
 
+        # 引用資料庫管理器實例
         self.__db_mgr = database_manager
+        # 標誌位，指示序列埠讀取是否正在進行
         self.is_running = False
 
         # 封包配置
@@ -38,9 +40,14 @@ class SerialManager(QObject):
         self.__pack_size = self.__pack_length * 4
 
         # 初始化狀態變量
-        self.__first_timestamp = 0
-        self.__previous_timestamp = 0
+        self.__first_timestamp = 0.0
+        self.__previous_timestamp = 0.0
         self.__velocity: list[float] = [0.0, 0.0, 0.0]
+
+        # 初始化計時器
+        self.__read_timer = QTimer(self)
+        self.__read_timer.timeout.connect(self.__read_serial_data)
+        self.__polling_interval_ms = 10
 
     def __log_message(self, message: str):
         self.messageSignal.emit(f"[SerialManager][LOG]: {message}")
@@ -50,38 +57,55 @@ class SerialManager(QObject):
 
     def __parse_raw_data(self, data: bytes, mode: str = "struct") -> tuple[float, ...]:
         if mode == "struct":
-            return unpack(f"{self.__pack_length}f", data)
+            return struct.unpack(f"<{self.__pack_length}f", data)
         elif mode == "numpy":
             return tuple(np.frombuffer(data, np.float32, count=self.__pack_length))
         else:
-            raise self.errorSignal.emit("[SerialManager][ERROR] Unknowed unpack mode.")  # type: ignore
+            self.errorSignal.emit("[SerialManager][ERROR] Unknowed unpack mode.")
+            raise ValueError("Unknown unpack mode.")
 
     @Slot()
-    def start(self):
-        self.serial.open()
-
-    def stop(self):
-        self.is_running = False
-        self.serial.close()
-
-    def run(self):
+    def start_serial_communication(self):
         try:
-            if self.is_running:
-                self.__process_loop()
+            if not self.serial.is_open:
+                self.serial.open()
+            self.is_running = True
+            self.__read_timer.start(self.__polling_interval_ms)
+            self.__log_message(
+                f"[SerialManager]: Serial port {self.serial.port} opened and polling started."
+            )
         except serial.SerialException as e:
             self.__log_error(e)
-        except pymysql.Error as e:
+            self.is_running = False
+        except Exception as e:
             self.__log_error(e)
+            self.is_running = False
 
-    # def write(self, message):
-    #     self.serial.write(message)
+    @Slot()
+    def stop_serial_communication(self):
+        self.is_running = False
+        self.__read_timer.stop()
+        if self.serial.is_open:
+            self.serial.close()
+        self.__log_message(
+            f"[SerialManager]: Serial port {self.serial.port} closed and polling stopped."
+        )
 
-    def __process_loop(self):
-        self.__log_message("Entering process loop...")
-        while self.serial.in_waiting >= self.__pack_size:
-            raw_data = self.serial.read(self.__pack_size)
-            parsed = self.__parse_raw_data(raw_data)
-            self.__process_packet(parsed)
+    @Slot()
+    def __read_serial_data(self):
+        if not self.is_running or not self.serial.is_open:
+            return
+
+        try:
+            while self.serial.in_waiting >= self.__pack_size:
+                raw_data = self.serial.read(self.__pack_size)
+                parsed = self.__parse_raw_data(raw_data)
+                self.__process_packet(parsed)
+        except serial.SerialException as e:
+            self.__log_error(e)
+            self.stop_serial_communication()
+        except Exception as e:
+            self.__log_error(e)
 
     def __process_packet(self, parsed: tuple[float, ...]):
         (

@@ -1,10 +1,146 @@
 # ~/view/widget/MapWidget.py
 
 
-# pylint: disable=E0611, C0115, C0103, C0116, C0114, C0301
-from PySide6.QtWidgets import QWidget
+# pylint: disable=E0611, C0114
+import json
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtCore import Slot
 
 
 class MapWidget(QWidget):
     def __init__(self) -> None:
-        pass
+        super().__init__()
+        self.map_view = QWebEngineView()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.map_view)
+        self.setLayout(layout)
+        self.init_map()
+
+    def init_map(self):
+        html = """
+        <!DOCTYPE html>
+        <html lang="zh-Hant">
+        <head>
+            <meta charset="UTF-8" />
+            <title>Leaflet</title>
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            <style>
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+            #map {
+                height: 100%;
+                width: 100%;
+            }
+            </style>
+        </head>
+        <body>
+            <div id="map"></div>
+
+            <script>
+            var map = L.map("map").setView([22.174, 120.892], 13);
+
+            // // Openstreetmap
+            // L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            //   maxZoom: 19,
+            //   attribution:
+            //     '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            // }).addTo(map);
+
+            // // Esri World Street Map
+            // L.tileLayer(
+            //   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+            //   {
+            //     attribution:
+            //       "Tiles &copy; Esri &mdash; Source: EsEsri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri Korea, Esri (Thailand), NGCC, (c) OpenStreetMap contributors, and the GIS User Community",
+            //   }
+            // ).addTo(map);
+
+            // // Esri World Topo Map
+            // L.tileLayer(
+            //   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+            //   {
+            //     attribution:
+            //       "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community",
+            //   }
+            // ).addTo(map);
+
+            // // Esri World Imagery
+            // L.tileLayer(
+            //   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            //   {
+            //     attribution:
+            //       "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+            //   }
+            // ).addTo(map);
+
+            // // Esri World Light Gray Canvas
+            // L.tileLayer(
+            //   "https://tiles.arcgis.com/tiles/Imiq7jQW7Jg98wFk/arcgis/rest/services/ArcGIS_World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+            //   {
+            //     attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
+            //     maxZoom: 16,
+            //   }
+            // ).addTo(map);
+
+            // CartoDB Positron
+            L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+                attribution:
+                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: "abcd",
+                maxZoom: 20,
+                }
+            ).addTo(map);
+
+            // // CartoDB Dark Matter
+            // L.tileLayer(
+            //   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+            //   {
+            //     attribution:
+            //       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            //     subdomains: "abcd",
+            //     maxZoom: 20,
+            //   }
+            // ).addTo(map);
+
+            L.marker([22.174, 120.892]).addTo(map).bindPopup("發射點").openPopup();
+
+            var polyline = L.polyline([], { color: "blue" }).addTo(map);
+
+            function updateMap(coordinates) {
+                var latlngs = coordinates.map(function (coord) {
+                return [coord[0], coord[1]];
+                });
+                polyline.setLatLngs(latlngs);
+                if (latlngs.length > 0) {
+                map.fitBounds(polyline.getBounds());
+                }
+                polyline.redraw();
+            }
+            </script>
+        </body>
+        </html>
+        """
+        self.map_view.setHtml(html)
+
+    @Slot(tuple)
+    def updateMap(self, longitude_latitude: tuple[tuple[float, float]]):
+        js_coordinates = json.dumps(longitude_latitude)
+        self.map_view.page().runJavaScript(f"updateMap({js_coordinates});")
+
+
+if __name__ == "__main__":
+    app = QApplication()
+    win = MapWidget()
+    win.show()
+    app.exec()
+# /media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/view/widget/leaflet/leaflet.css

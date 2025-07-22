@@ -1,142 +1,106 @@
 # ~/view/widget/VtkWidget.py
 
 
-# pylint: disable=E0611, C0115, C0103, C0116, C0114, C0301
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QApplication
-from PySide6.QtGui import QCloseEvent
-from vtkmodules.vtkRenderingCore import (
-    vtkPolyDataMapper,
-    vtkActor,
-    vtkRenderer,
-)
+# pylint: disable=E0611, C0114
+from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtCore import Signal, Slot
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
 from vtkmodules.vtkIOGeometry import vtkSTLReader
+from vtkmodules.vtkRenderingCore import vtkPolyDataMapper, vtkActor, vtkRenderer
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 
 class VtkWidget(QWidget):
-    def __init__(
-        self,
-        stlPath: str = "D:\\WorkSpace\\Program\\2025_TASA_Rocket_refactor\\sources\\model.stl",
-    ):
+    messageSignal = Signal(str)
+    errorSignal = Signal(str)
+
+    def __init__(self, stl_file_path: str):
         super().__init__()
+        self.current_y_angle = 0.0
+        self.actor = None
 
-        self.m_vtkWidget = QVTKRenderWindowInteractor(self)
-        self.m_renderWindow = self.m_vtkWidget.GetRenderWindow()  # type: ignore
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
 
-        # 初始化 Renderer
-        self.m_renderer = vtkRenderer()
-        self.m_renderer.SetBackground(0.2, 0.2, 0.2)
-        self.m_renderWindow.AddRenderer(self.m_renderer)  # type: ignore
+        self.vtk_interactor = QVTKRenderWindowInteractor(self)
+        layout.addWidget(self.vtk_interactor)
 
-        # 初始化 Interactor
-        self.m_interactor = self.m_renderWindow.GetInteractor()  # type: ignore
+        self.ren_win = self.vtk_interactor.GetRenderWindow()
+        self.renderer = vtkRenderer()
+        self.ren_win.AddRenderer(self.renderer)
 
-        # 載入 STL 模型
-        self.m_reader = vtkSTLReader()
-        self.m_reader.SetFileName(stlPath)
-        self.m_reader.Update()  # type: ignore
+        interactor_style = vtkInteractorStyleTrackballCamera()
+        self.vtk_interactor.SetInteractorStyle(interactor_style)
 
-        # 設置 Mapper
-        self.m_mapper = vtkPolyDataMapper()
-        self.m_mapper.SetInputConnection(self.m_reader.GetOutputPort())
+        if stl_file_path:
+            self._load_stl(stl_file_path)
+        else:
+            print(
+                "[VtkWidget] No STL files are provided, the default model will be used."
+            )
+            self._create_default_sphere()
 
-        # 設置 Actor
-        self.m_actor = vtkActor()
-        self.m_actor.SetMapper(self.m_mapper)
-        self.m_actor.GetProperty().SetColor(0.8, 0.8, 0.8)
+        self.renderer.SetBackground(0.1, 0.2, 0.4)
+        self.renderer.ResetCamera()
 
-        # 添加 Actor 到 Renderer
-        self.m_renderer.AddActor(self.m_actor)
+        self.vtk_interactor.Initialize()
 
-        # 設置 Camera 位置
-        self.m_renderer.ResetCamera()
+    def _load_stl(self, file_path: str):
+        reader = vtkSTLReader()
+        reader.SetFileName(file_path)
+        reader.Update()
 
-        # 設置 Layout
-        mainLayout = QVBoxLayout(self)
-        mainLayout.addWidget(self.m_vtkWidget)
-        self.setLayout(mainLayout)
+        if reader.GetOutput().GetNumberOfPoints() == 0:
+            self.messageSignal.emit(f"[VtkWidget] Fail to load STL file: {file_path}.")
+            return
 
-        # 初始化 Interactor
-        self.m_interactor.Initialize()  # type: ignore
-        self.m_renderWindow.Render()  # type: ignore
+        mapper = vtkPolyDataMapper()
+        mapper.SetInputConnection(reader.GetOutputPort())
 
-    def updateModule(self, xyzAngle: list[float]):
-        # 設置 Actor 朝向
-        self.m_actor.SetOrientation(*xyzAngle)
+        self.actor = vtkActor()
+        self.actor.SetMapper(mapper)
+        self.actor.GetProperty().SetColor(0.9, 0.7, 0.1)
 
-        # 重新渲染場景
-        self.m_renderWindow.Render()  # type: ignore
+        self.renderer.AddActor(self.actor)
+        self.renderer.ResetCamera()
+        self.messageSignal.emit(
+            f"[VtkWidget] Successfully loaded STL file: {file_path}."
+        )
 
-    def closeEvent(self, event: QCloseEvent):
-        # 關閉VTK交互器
-        self.m_interactor.TerminateApp()  # type: ignore
+    def _create_default_sphere(self):
+        from vtkmodules.vtkFiltersSources import vtkSphereSource
+
+        sphere = vtkSphereSource()
+        sphere.SetRadius(10.0)
+        sphere.SetPhiResolution(30)
+        sphere.SetThetaResolution(30)
+        sphere.Update()
+
+        mapper = vtkPolyDataMapper()
+        mapper.SetInputConnection(sphere.GetOutputPort())
+
+        self.actor = vtkActor()
+        self.actor.SetMapper(mapper)
+        self.actor.GetProperty().SetColor(0.8, 0.3, 0.3)
+
+        self.renderer.AddActor(self.actor)
+
+    @Slot(float)
+    def set_y_angle(self, angle: float):
+        if self.actor:
+            self.actor.SetOrientation(270, angle, 0)
+            self.current_y_angle = angle
+            self.ren_win.Render()
+        else:
+            print("[VtkWidget] 無可旋轉的模型。")
+
+    def get_current_y_angle(self) -> float:
+        return self.current_y_angle
+
+    def closeEvent(self, event):
+        interactor = self.vtk_interactor.GetRenderWindow().GetInteractor()
+        if interactor is not None:
+            interactor.Disable()
+            self.ren_win.Finalize()
+            self.vtk_interactor.TerminateApp()
         super().closeEvent(event)
-
-
-if __name__ == "__main__":
-    app = QApplication()
-    win = VtkWidget(
-        "D:\\WorkSpace\\Program\\2025_TASA_Rocket_refactor\\sources\\model.stl"
-    )
-    win.show()
-    app.exec()
-
-
-# # noinspection PyUnresolvedReferences
-# import vtkmodules.vtkInteractionStyle
-
-# # noinspection PyUnresolvedReferences
-# import vtkmodules.vtkRenderingOpenGL2
-# from vtkmodules.vtkCommonColor import vtkNamedColors
-# from vtkmodules.vtkIOGeometry import vtkSTLReader
-# from vtkmodules.vtkRenderingCore import (
-#     vtkActor,
-#     vtkPolyDataMapper,
-#     vtkRenderWindow,
-#     vtkRenderWindowInteractor,
-#     vtkRenderer,
-# )
-
-
-# def main():
-#     colors = vtkNamedColors()
-
-#     # filename = get_program_parameters()
-
-#     reader = vtkSTLReader()
-#     reader.SetFileName(
-#         "/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/sources/model.stl"
-#     )
-
-#     mapper = vtkPolyDataMapper()
-#     mapper.SetInputConnection(reader.GetOutputPort())
-
-#     actor = vtkActor()
-#     actor.SetMapper(mapper)
-#     actor.GetProperty().SetDiffuse(0.8)
-#     actor.GetProperty().SetDiffuseColor(colors.GetColor3d("LightSteelBlue"))
-#     actor.GetProperty().SetSpecular(0.3)
-#     actor.GetProperty().SetSpecularPower(60.0)
-
-#     # Create a rendering window and renderer
-#     ren = vtkRenderer()
-#     renWin = vtkRenderWindow()
-#     renWin.AddRenderer(ren)
-#     renWin.SetWindowName("ReadSTL")
-
-#     # Create a renderwindowinteractor
-#     iren = vtkRenderWindowInteractor()
-#     iren.SetRenderWindow(renWin)
-
-#     # Assign actor to the renderer
-#     ren.AddActor(actor)
-#     ren.SetBackground(colors.GetColor3d("DarkOliveGreen"))
-
-#     # Enable user interface interactor
-#     iren.Initialize()
-#     renWin.Render()
-#     iren.Start()
-
-
-# if __name__ == "__main__":
-#     main()

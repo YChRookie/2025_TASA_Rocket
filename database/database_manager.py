@@ -1,9 +1,9 @@
 # ~/database/database_manager.py
 
 
-# pylint: disable=C0114, C0115, C0116
-import pymysql
+# pylint: disable=C0114
 import threading
+import pymysql
 
 
 class DatabaseManager:
@@ -52,7 +52,7 @@ class DatabaseManager:
         self,
         host: str = "localhost",
         user: str = "root",
-        password: str = "IntScope_-2147483647~2147483647",
+        password: str = "IntScope_-2147483648~2147483647",
         database: str = "sensor_data",
     ):
         self.__host = host
@@ -168,10 +168,19 @@ class DatabaseManager:
         except pymysql.Error as e:
             raise e
 
+    def get_y_angle(self):
+        cur = self.__get_cursor()
+        try:
+            cur.execute("select y_angle from orientation order by id desc limit 1")
+            data = cur.fetchone()
+            return data if data else (22.174, 120.892)
+        except pymysql.Error as e:
+            raise e
+
     def get_longitude_lattitude(
         self, limit: bool = False, limit_count: int | None = None
     ):
-        data = self.__fetch_data("location", "longitude, latitude", limit, limit_count)
+        data = self.__fetch_data("location", "latitude, longitude", limit, limit_count)
         return data
 
     def close_all_connections(self):

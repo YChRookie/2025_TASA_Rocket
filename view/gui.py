@@ -1,7 +1,7 @@
 # ~/gui.py
 
 
-# pylint: disable=E0611, C0103, W0201, C0114, C0115, C0116,
+# pylint: disable=E0611, C0114, C0103
 from PySide6.QtWidgets import (
     QMainWindow,
     QPlainTextEdit,
@@ -12,8 +12,8 @@ from PySide6.QtWidgets import (
     QGridLayout,
 )
 from PySide6.QtGui import QAction
-from PySide6.QtCore import Slot, QTimer, QThread  # type: ignore
-from view.widget.MplWidget import MplWidget
+from PySide6.QtCore import Slot, QThread
+from view.widget.MplWidget import VtWidget, HtWidget
 from view.widget.MapWidget import MapWidget
 from view.widget.VtkWidget import VtkWidget
 
@@ -22,101 +22,122 @@ from services.serial_manager import SerialManager
 from services.data_fetcher import DataFetcher
 
 
-class MainWindow(QMainWindow):
+class Window(QMainWindow):
     def __init__(self, database_manager: DatabaseManager) -> None:
         super().__init__()
 
-        # 初始化時鐘
-        self.timer = QTimer()
-        self.timer.setInterval(100)
-        self.timer.timeout.connect(self.update)
+        self.setupUI()
 
-        # 初始化資料庫管理器
-        self.__db_thread = QThread()
-        self.__db_mgr = database_manager
-        self.__db_mgr.messageSignal.connect(self.__terminal.appendPlainText)
-        self.__db_mgr.errorSignal.connect(self.__terminal.appendPlainText)
-        self.__db_mgr.moveToThread(self.__db_thread)
+        # 引用資料庫管理器實例
+        self.db_mgr = database_manager
 
         # 初始化序列埠管理器
-        self.__ser_thread = QThread()
-        self.__ser_mgr = SerialManager(
-            self.__db_mgr, port="/dev/...", baudrate=115200, timeout=0.1, pack_length=11
+        self.serialThread = QThread()
+        self.serialManager = SerialManager(
+            self.db_mgr,
+            port="/dev/ttyUSB0",
+            baudrate=115200,
+            timeout=0.1,
+            pack_length=11,
         )
-        self.__ser_mgr.messageSignal.connect(self.__terminal.appendPlainText)
-        self.__ser_mgr.errorSignal.connect(self.__terminal.appendPlainText)
-        self.__ser_mgr.moveToThread(self.__ser_thread)
-        
+        self.serialManager.messageSignal.connect(self.loggingWidget.appendPlainText)
+        self.serialManager.errorSignal.connect(self.loggingWidget.appendPlainText)
+        self.serialManager.moveToThread(self.serialThread)
+        self.serialThread.started.connect(self.serialManager.start_serial_communication)
+
         # 初始化資料獲取器
-        self.__fethcer_thread = QThread()
-        self.__fetcher = DataFetcher(self.__db_mgr)
-        self.__fetcher.moveToThread(self.__fethcer_thread)
+        self.dataFetcherThread = QThread()
+        self.dataFetcher = DataFetcher(self.db_mgr)
+        self.dataFetcher.dataReady.connect(self.updateWidget)
+        self.dataFetcher.messageSignal.connect(self.loggingWidget.appendPlainText)
+        self.dataFetcher.errorSignal.connect(self.loggingWidget.appendPlainText)
+        self.dataFetcher.moveToThread(self.dataFetcherThread)
+        self.dataFetcherThread.started.connect(self.dataFetcher.start_fetching)
 
     def setupUI(self):
+        """初始化UI"""
+
         # 新增 QToolBar
-        self.__toolBar = QToolBar(parent=self)
-        self.addToolBar(self.__toolBar)
+        self.toolBar = QToolBar(parent=self)
+        self.addToolBar(self.toolBar)
         # 初始化 QAction
-        startButton = QAction(text="開始", parent=self)
-        stopButton = QAction(text="停止", parent=self)
-        restartSensorButton = QAction(text="重啟感測器", parent=self)
-        # QAction 連接 Slot
+        startButton = QAction(text="開始", parent=self.toolBar)
         startButton.triggered.connect(self.start)
+        stopButton = QAction(text="停止", parent=self.toolBar)
         stopButton.triggered.connect(self.stop)
-        restartSensorButton.triggered.connect(self.restart)
-        # QToolbar 新增 QAction
-        self.__toolBar.addAction(startButton)
-        self.__toolBar.addAction(stopButton)
-        self.__toolBar.addAction(restartSensorButton)
+        # 設置 QAction
+        self.toolBar.addAction(startButton)
+        self.toolBar.addAction(stopButton)
 
-        # 初始化監控區
-        self.__monitor = QTabWidget()
-        self.__monitor_layout = QGridLayout()
+        self.vtPlot = VtWidget()
+        self.vtPlot.set_title("Velocity")
+        self.htPlot = HtWidget()
+        self.htPlot.set_title("Altitude")
+        self.modelOrientation = QWidget()
+        self.map = MapWidget()
 
-        self.__vtWidget = MplWidget()
-        self.__vtWidget.setTitle("Velocity")
-        self.__htWidget = MplWidget()
-        self.__htWidget.setTitle("Altitude")
-        self.__htWidget.setLabels("Time", "Altitude")
-        self.__vtkWidget = VtkWidget(
-            "/media/ubuntu/Data/WorkSpace/Program/2025_TASA_Rocket_refactor/sources/model.stl"
-        )
-        self.__mapWidget = MapWidget()
+        # 設置 DashBoard
+        self.dashBoard = QWidget()
+        self.dashBoardLayout = QGridLayout()
+        self.dashBoard.setLayout(self.dashBoardLayout)
+        self.dashBoardLayout.addWidget(self.vtPlot, 0, 0)
+        self.dashBoardLayout.addWidget(self.htPlot, 0, 1)
+        self.dashBoardLayout.addWidget(self.modelOrientation, 1, 0)
+        self.dashBoardLayout.addWidget(self.map, 1, 1)
 
-        # 設置
-        self.__monitor_layout.addWidget(self.__vtWidget, 0, 0)
-        self.__monitor_layout.addWidget(self.__htWidget, 0, 1)
-        self.__monitor_layout.addWidget(self.__mapWidget, 1, 0)
-        self.__monitor_layout.addWidget(self.__vtkWidget, 1, 1)
+        # 設置 TabWidget
+        self.tab = QTabWidget(parent=self)
+        self.tab.addTab(self.dashBoard, "DashBoard")
+        self.tab.addTab(self.vtPlot, "Velocity")
+        self.tab.addTab(self.htPlot, "Altitude")
+        self.tab.addTab(self.modelOrientation, "Orientation")
+        self.tab.addTab(self.map, "Location")
 
-        self.__terminal = QPlainTextEdit()
-        self.__terminal.setReadOnly(True)
+        # 設置 Logging 元件
+        self.loggingWidget = QPlainTextEdit()
+        self.loggingWidget.setReadOnly(True)
 
-        self.mainWidget = QWidget()
-        self.mainLayout = QVBoxLayout()
-        self.mainWidget.setLayout(self.mainLayout)
-        self.setCentralWidget(self.mainWidget)
-        self.mainLayout.addWidget(self.__monitor)
-        self.mainLayout.addWidget(self.__terminal)
+        # 設置 CentralWidget
+        self.bottomWidget = QWidget()
+        self.bottomLayout = QVBoxLayout()
+        self.bottomWidget.setLayout(self.bottomLayout)
+        self.setCentralWidget(self.bottomWidget)
 
-    @Slot(str)
-    def log_error(self, message: str):
-        self.__terminal.appendPlainText(message)
+        self.bottomLayout.addWidget(self.tab, 3)  # Chart 布局比例 3/4
+        self.bottomLayout.addWidget(self.loggingWidget, 1)  # Logging 布局比例 1/4
 
-    @Slot(str):
-
-    
     @Slot()
     def start(self):
-        self.__ser_mgr.start()
-        self.__ser_mgr.run()
-        self.__db_fetcher.start()
+        """開始讀取序列埠並更新圖表"""
+
+        self.serialThread.start()
+        self.dataFetcherThread.start()
 
     @Slot()
     def stop(self):
-        self.__ser_mgr.stop()
+        """停止讀取序列埠並更新圖表"""
 
-    @Slot()
-    def restart(self):
-        pass
-        # self.__ser_mgr.write(b"restart")
+        self.serialThread.quit()
+        self.dataFetcherThread.quit()
+
+    @Slot(list)
+    def updateWidget(self, data: list):
+        """更新圖表
+
+        Args:
+            data (list): 圖表更新所需數據
+        """
+
+        elapsed_time: list[float] = data[0]
+        speed: list[float] = data[1]
+        x_velocity: list[float] = data[2]
+        y_velocity: list[float] = data[3]
+        z_velocity: list[float] = data[4]
+        altitude: list[float] = data[5]
+        y_angle: list[float] = data[6]
+        latitude_longitude: tuple[tuple[float]] = data[7]
+
+        self.vtPlot.update_plot(elapsed_time, speed, x_velocity, y_velocity, z_velocity)
+        self.htPlot.update_plot(elapsed_time, altitude)
+        # self.vtkWidget.set_y_angle(y_angle)
+        self.map.updateMap(latitude_longitude)

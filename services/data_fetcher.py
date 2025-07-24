@@ -1,7 +1,7 @@
 # ~/controller/data_fetcher.py
 
 
-# pylint: disable=E0611, C0114
+# pylint: disable=E0611, C0114, W0718
 import pymysql
 from PySide6.QtCore import QObject, Signal, Slot, QTimer
 from database.database_manager import DatabaseManager
@@ -22,7 +22,7 @@ class DataFetcher(QObject):
         # 創建 QTimer，用於定期獲取數據
         self.__fetch_timer = QTimer(self)
         self.__fetch_timer.timeout.connect(self.__fetch_data_periodically)
-        self.__polling_interval_ms = 1
+        self.__polling_interval_ms = 100
 
     def __log_message(self, message: str):
         self.messageSignal.emit(f"[DataFetcher][LOG]: {message}")
@@ -54,12 +54,12 @@ class DataFetcher(QObject):
             return
 
         try:
-            elapsed_time = self.__db_mgr.get_elapsed_time()
-            speed = self.__db_mgr.get_speed()
-            x_velocity = self.__db_mgr.get_x_velocity()
-            y_velocity = self.__db_mgr.get_y_velocity()
-            z_velocity = self.__db_mgr.get_z_velocity()
-            altitude = self.__db_mgr.get_altitude()
+            elapsed_time = self.__db_mgr.get_elapsed_time(limit_count=50)
+            speed = self.__db_mgr.get_speed(limit_count=50)
+            x_velocity = self.__db_mgr.get_x_velocity(limit_count=50)
+            y_velocity = self.__db_mgr.get_y_velocity(limit_count=50)
+            z_velocity = self.__db_mgr.get_z_velocity(limit_count=50)
+            altitude = self.__db_mgr.get_altitude(limit_count=50)
             y_angle = self.__db_mgr.get_y_angle()
 
             latitude_longitude = self.__db_mgr.get_longitude_lattitude()
@@ -83,4 +83,3 @@ class DataFetcher(QObject):
             self.stop_fetching()
         except Exception as e:
             self.__log_error(e)
-            raise e

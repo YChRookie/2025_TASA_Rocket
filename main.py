@@ -5,6 +5,7 @@ from database.database_manager import DatabaseManager
 from view.gui import Window
 
 db_mgr = DatabaseManager()
+db_mgr.init_table()
 
 app = QApplication()
 win = Window(db_mgr)

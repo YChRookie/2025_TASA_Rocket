@@ -3,7 +3,7 @@
 
 # pylint: disable=E0611, C0114
 from PySide6.QtWidgets import QWidget, QVBoxLayout
-from PySide6.QtCore import Qt, Slot
+from PySide6.QtCore import Slot  # type: ignore
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
@@ -29,7 +29,7 @@ class VtWidget(QWidget):
 
         # 建立 Layout 並加入 Canvas
         layout = QVBoxLayout(self)
-        layout.addWidget(self.__canvas)
+        layout.addWidget(self.__canvas, 1)
         self.setLayout(layout)
 
         # 初始化 Lable 與 Title
@@ -102,7 +102,7 @@ class HtWidget(QWidget):
 
         # 建立 Layout 並加入 Canvas
         layout = QVBoxLayout(self)
-        layout.addWidget(self.__canvas)
+        layout.addWidget(self.__canvas, 1)
         self.setLayout(layout)
 
         # 初始化 Lable 與 Title

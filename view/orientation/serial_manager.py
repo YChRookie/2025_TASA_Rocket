@@ -3,16 +3,13 @@
 
 # pylint: disable=E0611, C0114, W0718
 import struct
+import threading
 import serial
 import numpy as np
-from PySide6.QtCore import QObject, Signal, Slot, QTimer
 from database.database_manager import DatabaseManager
 
 
-class SerialManager(QObject):
-    messageSignal: Signal = Signal(str)
-    errorSignal: Signal = Signal(str)
-
+class SerialManager:
     def __init__(
         self,
         database_manager: DatabaseManager,

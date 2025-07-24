@@ -125,107 +125,6 @@ class DatabaseManager:
             conn.rollback()
             raise e
 
-    def __fetch_data(
-        self,
-        table: str,
-        columns: str,
-        limit_count: int = 0,
-    ) -> tuple:
-        """從指定表與欄位取得數據
-
-        Args:
-            table (str): 表名
-            columns (str): 欄位名稱
-            limit_count (int): 限制查詢數量. Defaults to 0.
-
-        Raises:
-            e: pymysql.Error
-
-        Returns:
-            tuple: 資料庫返回之數據，例如：((a,), (b,), (c,), ...)
-        """
-
-        cur = self.__get_cursor()
-        sql = f"select {columns} from {table} order by id asc"
-
-        if limit_count > 0:
-            sql += f" limit {limit_count}"
-        try:
-            cur.execute(sql)
-            result = cur.fetchall()
-            return result
-        except pymysql.Error as e:
-            raise e
-
-    def __flatten(self, data: tuple[tuple, ...]) -> list:
-        """扁平化巢狀數據
-
-        Args:
-            data (tuple[tuple, ...]): 巢狀數據，例如：((a,), (b,), (c,), ...)
-
-        Returns:
-            list: 扁平化後之數據，例如：[a, b, c]
-        """
-
-        return [item[0] for item in data]
-
-    def get_elapsed_time(self, limit_count: int = 0) -> list:
-        """取得歷經時間
-
-        Args:
-            limit_count (int): 限制查詢數量. Defaults to 0.
-
-        Returns:
-            list: 歷經時間序列，為資料庫返回之數據且經過扁平化。
-        """
-
-        data = self.__fetch_data("time_info", "elapsed_time", limit_count)
-        result = self.__flatten(data)
-        return result
-
-    def get_speed(self, limit_count: int = 0) -> list:
-        """取得速度
-
-        Args:
-            limit_count (int, optional): 限制數量. Defaults to 0.
-
-        Returns:
-            list: 速度序列，為資料庫返回之數據且經過扁平化。
-        """
-
-        data = self.__fetch_data("motion", "speed", limit_count)
-        result = self.__flatten(data)
-        return result
-
-    def get_x_velocity(self, limit_count: int = 0) -> list:
-        """取得X速度
-
-        Args:
-            limit_count (int, optional): _description_. Defaults to 0.
-
-        Returns:
-            list: _description_
-        """
-
-        data = self.__fetch_data("motion", "x_velocity", limit_count)
-        result = self.__flatten(data)
-        return result
-
-    def get_y_velocity(self, limit_count: int = 0):
-        data = self.__fetch_data("motion", "y_velocity", limit_count)
-        result = self.__flatten(data)
-        return result
-
-    def get_z_velocity(self, limit_count: int = 0):
-        data = self.__fetch_data("motion", "z_velocity", limit_count)
-        result = self.__flatten(data)
-        return result
-
-    def get_altitude(self, limit_count: int = 0):
-        data = self.__fetch_data("location", "altitude", limit_count)
-        result = self.__flatten(data)
-        return result
-
     def get_y_angle(self):
         cur = self.__get_cursor()
         try:
@@ -234,10 +133,6 @@ class DatabaseManager:
             return data
         except pymysql.Error as e:
             raise e
-
-    def get_longitude_lattitude(self, limit_count: int = 0):
-        data = self.__fetch_data("location", "latitude, longitude", limit_count)
-        return data
 
     def close_all_connections(self):
         if hasattr(self.__local, "connection") and self.__local.connection is not None:
